@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar 13 15:22:19 2020
+
+@author: Jess_H
+"""
+
+print("Hello World")
+
+import pandas as pd
+import statsmodels.formula.api as sm
+import numpy as np
+
+financials = pd.read_csv("//Users/Jess_H/Desktop/MGT 153/financials.csv") 
+print(financials.head(20))
+pd.set_option('display.max_columns', 500)
+
+print(financials.describe())
+print(financials.dtypes)
+print()
+
+print(financials.datadate.head(20))
+print()
+
+print('Break')
+print()
+
+print(financials.datadate.head(20))
+print(financials[['datadate','gvkey']].head(20))
+#need to have two brackets if you want to have two columns of data, like a list
+print()
+
+
+print(financials[financials.SALE < 100].head(20)) 
+print(financials[(financials.SALE < 100) & (financials.SALE > 0)].head(20))
+
+financials['SalesToAssets'] = financials.SALE/financials.AT
+print(financials.head(20))
+
+
+print(financials[financials.SALE < 100].head(20))
+
+print(financials[(financials.SALE < 100) & (financials.SALE > 0)].head(20))
+
+print(financials.isnull().sum())
+
+print(financials.isnull().sum(axis=1).head(20))
+
+financials['NumNull'] = financials.isnull().sum(axis=1)
+financials = financials.sort_values('NumNull',ascending=False)
+print(financials.head(20))
+
+financials = financials.drop(['IBE','OCF','PPE'], axis = 1)
+print(financials.head())
+
+print(financials.isnull().sum())
+financials.dropna(subset=['SALE'],inplace = True)
+print(financials.isnull().sum())
+
+financials.dropna(thresh=11,inplace=True)
+print(financials.head(20))
+
+financials.AP.fillna(financials.AP.mean(),inplace=True)
+financials.REC.fillna(financials.REC.mean(),inplace=True)
+financials.BV.fillna(financials.BV.mean(),inplace=True)
+print(financials.head(20))
+
+financials.MV.fillna(financials.groupby('2_digit_sic')['MV'].transform("mean"),inplace=True)
+
+print(financials.describe())
+
+
+financials = financials[financials.XOPR >= 0]
+financials = financials[financials.COGS >= 0]
+financials = financials[financials.BV > 0]
+financials = financials[financials.SALE > 0]
+financials = financials[financials.AT > 0]
+print(financials.describe())
+
+financials.EMP = ((financials.EMP - financials.EMP.mean())/financials.EMP.std())
+financials.COGS = ((financials.COGS - financials.COGS.min())/(financials.COGS.max() - financials.COGS.min()))
+print(financials.describe)
+
+financials['Binned_SALE']=pd.qcut(financials.SALE, 10, labels=False)
+print(financials.head(5))
+
+financials.SALE = np.where(financials.SALE < financials.SALE.quantile(q=0.02),
+                           financials.SALE.quantile(q=0.02),financials.SALE)
+
+financials.SALE = np.where(financials.SALE > financials.SALE.quantile(q=0.98),
+                           financials.SALE.quantile(q=0.98),financials.SALE)
+
+financials.SALE = np.where(financials.SALE < financials.SALE.quantile(q=0.02),
+                           financials.SALE.quantile(q=0.02),
+                           np.where(financials.SALE > financials.SALE.quantile(q=0.98)),
+                           financials.SALE.quantile(q=0.98),financials.SALE)
